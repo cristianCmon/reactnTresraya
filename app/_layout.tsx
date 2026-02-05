@@ -1,24 +1,32 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { useEffect } from 'react';
+import { View } from 'react-native';
+import { iniciarBD } from '../basedatos/basedatos';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  useEffect(() => {
+    // INICIA BASE DE DATOS AL INICIAR LA APLICACIÓN
+    iniciarBD();
+  }, []);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+    // View envolvente para evitar destellos al cargar
+    <View style={{ flex: 1, backgroundColor: '#2c3e50' }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          // Esto cambia el fondo de la transición de todas las pantallas
+          contentStyle: { backgroundColor: '#2c3e50' }, 
+          // Opcional: Esto hace que la animación sea un fundido suave en lugar de un deslizamiento
+          animation: 'fade', 
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="configuracion" />
+        <Stack.Screen name="juego" />
+        <Stack.Screen name="puntuaciones" />
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    </View>
   );
 }
