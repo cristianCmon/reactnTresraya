@@ -6,7 +6,7 @@ import { estilos } from '../styles/css.index';
 export default function MenuPrincipal() {
   return (
     <View style = {estilos.contenedor}>
-      {/* LOGO DEL JUEGO */}
+      {/* LOGO DE LA APLICACIÓN */}
       <Image 
         source = {require('../assets/images/tictactoe2.png')}
         style = {estilos.logo} 

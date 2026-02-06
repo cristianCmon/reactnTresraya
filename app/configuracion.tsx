@@ -39,7 +39,7 @@ export default function PantallaConfiguracionPartida() {
           placeholder = "Ej. Pepito"
           placeholderTextColor = "#95a5a6"
           value = {nombreJugador}
-          onChangeText = {setNombreJugador} // Actualiza el estado al escribir
+          onChangeText = {setNombreJugador} // ACTUALIZA ESTADO AL ESCRIBIR
           maxLength = {10}
         />
 

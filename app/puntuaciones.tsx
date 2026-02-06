@@ -17,7 +17,7 @@ export default function PantallaPuntuaciones() {
     }, [])
   );
 
-  // Componente para cada fila de la lista
+  // CADA REGISTRO DE LA LISTA
   const renderizarRegistro = ({ item, index }: { item: Puntuacion; index: number }) => (
     <View style = {estilos.registro}>
       <Text style = {estilos.puesto}>{index + 1}.</Text>
@@ -31,6 +31,7 @@ export default function PantallaPuntuaciones() {
     <View style = {estilos.contenedor}>
       <Text style = {estilos.titulo}>🏆  Top 10  🏆</Text>
 
+      {/* CONDICIONAL: SI HAY REGISTROS LOS RENDERIZA Y MUESTRA, SINO MENSAJE INDICATIVO */}
       {puntuaciones.length > 0 ? (
         <FlatList
           data = {puntuaciones}
@@ -44,7 +45,6 @@ export default function PantallaPuntuaciones() {
         </View>
       )}
 
-      {/* <TouchableOpacity style={estilos.backButton} onPress={() => router.back()}> */}
       <TouchableOpacity style = {estilos.botonVolver} onPress={() => router.replace('/')}>
         <Text style = {estilos.textoBotonVolver}>VOLVER</Text>
       </TouchableOpacity>

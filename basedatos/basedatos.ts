@@ -1,8 +1,8 @@
 import * as SQLite from 'expo-sqlite';
 
-// INICIAMOS O CREAMOS LA BASE DE DATOS
-export const db = SQLite.openDatabaseSync('tresraya.db');
 
+// INICIAMOS Y/O CREAMOS LA BASE DE DATOS
+export const db = SQLite.openDatabaseSync('tresraya.db');
 export const iniciarBD = () => {
   db.execSync(`
     CREATE TABLE IF NOT EXISTS puntuaciones (
