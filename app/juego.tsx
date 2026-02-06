@@ -5,14 +5,16 @@ import { db } from '../basedatos/basedatos';
 import { estilos } from '../styles/css.juego';
 
 
+// POSIBLES VALORES DE UNA CASILLA
 type ValorCasilla = 'X' | 'O' | null;
 
 export default function PantallaPartida() {
+  // ACTIVA ENRUTAMIENTO ENTRE PANTALLAS (POSTERIORMENTE VOLVEREMOS AL MENÚ PRINCIPAL)
   const router = useRouter();
   // PARÁMETROS ENVIADOS DESDE configuracion.tsx
   const { jugador, dificultad } = useLocalSearchParams<{ jugador: string; dificultad: 'facil' | 'dificil' }>();
 
-	// ESTADOS
+	// ESTADOS DE PARTIDA
   const [tablero, setTablero] = useState<ValorCasilla[]>(Array(9).fill(null));
   const [esTurnoJugador, setEsTurnoJugador] = useState(true); // El jugador siempre es 'X'
   const [finPartida, setFinPartida] = useState(false);
@@ -21,6 +23,7 @@ export default function PantallaPartida() {
 	const [empatadas, setEmpatadas] = useState(0);
 	const [puntuacionActual, setPuntuacionActual] = useState(0);
 
+  // ESTADOS FINALES DE LA PARTIDA
   const ganador = calcularGanador(tablero);
   const esEmpate = !ganador && tablero.every(casilla => casilla !== null);
 
@@ -32,33 +35,29 @@ export default function PantallaPartida() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [esTurnoJugador]);
+  }, [esTurnoJugador]); // SE EJECUTA EN CADA CAMBIO DE TURNO
 
-  // CUANDO TERMINA LA PARTIDA SALTA UN MODAL (Alert)
+  // CUANDO TERMINA LA PARTIDA SE ACTUALIZA EL MARCADOR
   useEffect(() => {
-    if (ganador === 'X') {
-      // Alert.alert('¡Victoria!', `\nEnhorabuena ${jugador}, has ganado este duelo.\n`, [{ text: 'OK' }]);
+    if (ganador === 'X') { // JUGADOR (SUMA 50 PTOS FÁCIL, 300 PTOS DIFÍCIL)
 			const sumaPuntos = dificultad === 'dificil' ? 300 : 50;
 			setGanadas(anterior => anterior + 1);
 			setPuntuacionActual(anterior => anterior + sumaPuntos);
-			// SI SE GANA AUTOMÁTICAMENTE GUARDA LA PUNTUACIÓN
-      // guardarPuntuacion();
       setFinPartida(true);
 
-    } else if (ganador === 'O') {
-      // Alert.alert('Derrota', '\nHas sido derrotado por la máquina, ¡espabila!\n', [{ text: 'OK' }]);
+    } else if (ganador === 'O') { // IA (RESTA 25 PTOS FÁCIL, 150 PTOS DIFÍCIL)
 			const restaPuntos = dificultad === 'dificil' ? 150 : 25;
 			setPerdidas(anterior => anterior + 1);
-			setPuntuacionActual(anterior => Math.max(0, anterior - restaPuntos))
+			setPuntuacionActual(anterior => Math.max(0, anterior - restaPuntos)) // FILTRO NÚMERO NEGATIVOS
       setFinPartida(true);
 
     } else if (esEmpate) {
-      // Alert.alert('Tablas', '\nNi ganador ni perdedor, esto es un empate.\n', [{ text: 'OK' }]);
 			setEmpatadas(anterior => anterior + 1);
       setFinPartida(true);
     }
-  }, [ganador, esEmpate]);
+  }, [ganador, esEmpate]); // SE EJECUTA CUANDO SE GANA, PIERDE O EMPATA
 
+  // INSERTA REGISTRO DE LA PARTIDA EN BD AL SALIR AL MENÚ PRINCIPAL
   const guardarPuntuacion = () => {
     const dificultadFormat = dificultad === 'dificil' ? 'Difícil' : 'Fácil';
 
@@ -70,25 +69,27 @@ export default function PantallaPartida() {
     }
   };
 
+  // PROCESA LA PULSACIÓN DEL USUARIO EN CASILLA DE TABLERO
   const manejarPulsacion = (index: number) => {
     if (tablero[index] || ganador || !esTurnoJugador) return;
 
-    const nuevoTablero = [...tablero];
+    const nuevoTablero = [...tablero]; // SPREAD OPERATOR PARA COPIAR TABLERO
     nuevoTablero[index] = 'X';
     setTablero(nuevoTablero);
     setEsTurnoJugador(false);
   };
 
+  // LÓGICA DE TOMA DE DECISIONES DE LA IA
   const efectuarMovimientoIA = () => {
     const nuevoTablero = [...tablero];
     let mejorMovimiento: number | undefined = -1;
 
     if (dificultad === 'dificil') {
-      // IA Difícil: Primero intenta ganar, luego intenta bloquear al jugador
+      // EN DIFÍCIL INTENTA GANAR O BLOQUEAR AL JUGADOR
       mejorMovimiento = buscarMovimientoGanador(nuevoTablero, 'O') || buscarMovimientoGanador(nuevoTablero, 'X');
     }
 
-    // Si no hay movimiento crítico o nivel fácil, elige uno aleatorio
+    // EN FÁCIL O SIN JUGADA CRÍTICA ELIGE CASILLA AL AZAR
     if (mejorMovimiento === -1 || mejorMovimiento === undefined) {
       const movimientosDisponibles = nuevoTablero
         .map((val, idx) => val === null ? idx : null)
@@ -106,6 +107,7 @@ export default function PantallaPartida() {
     }
   };
 
+  // ALGORITMO PARA LA IA QUE COMPRUEBA SI HAY JUGADA QUE HAGA 3 EN RAYA
   const buscarMovimientoGanador = (s: ValorCasilla[], p: ValorCasilla): number | undefined => {
     const lines = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
 
@@ -118,6 +120,7 @@ export default function PantallaPartida() {
     return undefined;
   };
 
+  // ALGORITMO QUE COMPRUEBA SI HAY UN GANADOR
 	function calcularGanador(casillas: ValorCasilla[]): ValorCasilla {
 		const lines = [[0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]];
 
@@ -128,6 +131,7 @@ export default function PantallaPartida() {
 		return null;
 	}
 
+  // CREA LA FICHA DE CADA JUGADOR EN LA CASILLA QUE CORRESPONDA
 	const renderizarCasilla = (i: number) => (
     <TouchableOpacity key = {i} style = {estilos.casilla} onPress={() => manejarPulsacion(i)}>
       <Text style = {[estilos.textoCasilla, { color: tablero[i] === 'X' ? '#22235B' : '#A1161F' }]}>
@@ -136,6 +140,7 @@ export default function PantallaPartida() {
     </TouchableOpacity>
   );
 
+  // CUANDO SE SALE AL MENÚ PRINCIPAL, SI EL JUGADOR TIENE PUNTOS, GUARDA LA PARTIDA
 	const manejarSalida = () => {
 		if (finPartida && puntuacionActual > 0) {
 			guardarPuntuacion();
@@ -146,7 +151,7 @@ export default function PantallaPartida() {
 
   return (
     <View style={estilos.contenedor}>
-			{/* TRANSICIÓN SUAVE DESDE ABAJO*/}
+			{/* TRANSICIÓN SUAVE DE PANTALLA DESDE ABAJO*/}
 			<Stack.Screen
 				options = {{
 					animation: 'slide_from_bottom',
@@ -154,7 +159,7 @@ export default function PantallaPartida() {
 				}} 
 			/>
 
-			{/* Cabecera con Nombre y Puntos Totales */}
+			{/* CABECERA CON NOMBRE Y PUNTOS TOTALES */}
 			<View style = {estilos.cabecera}>
 				<Text style = {estilos.textoJugador}>{jugador}</Text>
 				<View style = {estilos.zonaPuntos}>
@@ -162,7 +167,7 @@ export default function PantallaPartida() {
 				</View>
 			</View>
 
-			{/* Marcador de Victorias/Derrotas/Empates */}
+			{/* MARCADOR DE VICTORIAS/DERROTAS/EMPATES */}
 			<View style = {estilos.contenedorEstadisticas}>
 				<View style = {estilos.caja}>
 					<Text style = {[estilos.cantidad, {color: '#2ecc71'}]}>{ganadas}</Text>
@@ -178,8 +183,7 @@ export default function PantallaPartida() {
 				</View>
 			</View>
 
-			{/* INFO */}
-      {/* <Text style = {estilos.participantes}>{jugador} (X) vs IA (O)</Text> */}
+			{/* NIVEL DE DIFICULTAD SELECCIONADO */}
       <Text style = {estilos.dificultadPartida}>{dificultad === 'dificil' ? 'Difícil' : 'Fácil'}</Text>
 
       {/* TABLERO */}
@@ -191,7 +195,7 @@ export default function PantallaPartida() {
         ))}
       </View>
 
-			{/* BOTONERA */}
+			{/* BOTONERA REINTENTAR/SALIR */}
 			<TouchableOpacity
 				disabled = {!finPartida}
 				style={[
